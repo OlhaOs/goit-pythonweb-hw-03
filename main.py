@@ -1,7 +1,6 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import urllib.parse
-import pathlib
-import mimetypes
+import urllib.parse, pathlib, mimetypes, os, json
+from datetime import datetime
 
 class HttpHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -18,11 +17,25 @@ class HttpHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         data = self.rfile.read(int(self.headers['Content-Length']))
-        print(data)
         data_parse = urllib.parse.unquote_plus(data.decode())
-        print(data_parse)
         data_dict = {key: value for key, value in [el.split('=') for el in data_parse.split('&')]}
-        print(data_dict)
+
+        file_path = pathlib.Path('storage/data.json')
+        if file_path.exists():
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    try:
+                        all_data = json.load(f)
+                    except json.JSONDecodeError:
+                        all_data = {}
+        else:
+            all_data = {}
+
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        all_data[timestamp] = data_dict
+
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(all_data, f, ensure_ascii=False, indent=4)
+
         self.send_response(302)
         self.send_header('Location', '/')
         self.end_headers()
