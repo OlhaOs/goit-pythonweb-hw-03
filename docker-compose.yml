@@ -1,0 +1,9 @@
+version: "3.9"
+
+services:
+  my-app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./storage/data.json:/app/storage/data.json
